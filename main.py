@@ -1,9 +1,5 @@
-"""
-🎲 DnD Session Scheduler Bot
-Requirements: pip install pyTelegramBotAPI
-"""
-
 import logging
+import os
 import sqlite3
 import calendar
 from datetime import date, datetime
@@ -13,7 +9,7 @@ import telebot
 from telebot.types import InlineKeyboardMarkup, InlineKeyboardButton
 
 # ── Config ─────────────────────────────────────────────────────────────────────
-BOT_TOKEN = "8294933025:AAFdaVHh2qQOb1NK4IKOWLR0YR2YBQrpNfY"  
+BOT_TOKEN = os.environ.get('BOT_TOKEN')
 DB_PATH   = "dnd_sessions.db"
 
 logging.basicConfig(
@@ -22,7 +18,7 @@ logging.basicConfig(
 )
 log = logging.getLogger(__name__)
 
-bot = telebot.TeleBot(BOT_TOKEN, parse_mode="Markdown")
+bot = telebot.TeleBot(BOT_TOKEN, parse_mode="Markdown") # type: ignore
 
 MONTH_NAMES = [
     "", "Январь", "Февраль", "Март", "Апрель", "Май", "Июнь",
