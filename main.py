@@ -169,12 +169,14 @@ def build_schedule_text(year: int, month: int) -> str:
         name = r["full_name"] or r["username"] or str(r["user_id"])
         by_date[r["session_date"]].append(name)
 
+    counter = [(len(by_date[iso]),iso) for iso in by_date]
+
     lines = [f"📅 *{MONTH_NAMES[month]} {year}* — Помеченные Дни\n"]
-    for iso in sorted(by_date):
+    for count, iso in sorted(counter, reverse=True):
         d        = datetime.strptime(iso, "%Y-%m-%d")
         day_name = d.strftime("%A %d")
         players  = ", ".join(by_date[iso])
-        lines.append(f"  🗡 *{day_name}* — {players}")
+        lines.append(f"  🗡 *{day_name} * — *({count})* {players} ")
     return "\n".join(lines)
 
 
