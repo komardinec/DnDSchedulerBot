@@ -1,0 +1,20 @@
+[Unit]
+Description=Telegram bot for Dungeons&Dragons "DnDSchedulerBot"
+After=syslog.target
+After=network.target
+
+[Service]
+Type=simple
+# root can be changed to another suitable user for service handling 
+User=root
+# WorkingDirectory= require full path to directory with .py python file with virtual environment
+WorkingDirectory=/home/bothost/DnDSchedulerBot
+# ExecStart= expect that we will create venv for python. And paths to executable python binary file (from virtueal environment) and .py file should have full path
+ExecStart=/home/bothost/DnDSchedulerBot/.venv/bin/python /home/bothost/DnDSchedulerBot/main.py --serve-in-foreground
+# RestartSec= used to set timeout time after which service will reload
+RestartSec=10
+# Restart=always will force systemd to restart service constantly
+Restart=always
+
+[Install]
+WantedBy=multi-user.target
