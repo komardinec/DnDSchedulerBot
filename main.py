@@ -4,11 +4,15 @@ import sqlite3
 import calendar
 from datetime import date, datetime
 from collections import defaultdict
+from dotenv import load_dotenv
+import re
 
 import telebot
-from telebot.types import InlineKeyboardMarkup, InlineKeyboardButton
+from telebot.types import InlineKeyboardMarkup, InlineKeyboardButton, BotCommand
 
 # ── Config ─────────────────────────────────────────────────────────────────────
+load_dotenv() # it is strictly necessary to create a .env file with BOT_TOKEN=your_token_here
+# in the same directory as this script, or set the BOT_TOKEN environment variable in your system.
 BOT_TOKEN = os.environ.get('BOT_TOKEN')
 DB_PATH   = "dnd_sessions.db"
 
@@ -25,6 +29,30 @@ MONTH_NAMES = [
     "Июль", "Август", "Сентябрь", "Октябрь", "Ноябрь", "Декабрь",
 ]
 
+DAY_TRANSLATIONS = {
+    "Monday":    "Понедельник",
+    "Tuesday":   "Вторник",
+    "Wednesday": "Среда",
+    "Thursday":  "Четверг",
+    "Friday":    "Пятница",
+    "Saturday":  "Суббота",
+    "Sunday":    "Воскресенье",
+}
+
+MONTH_TRANSLATIONS = {
+    "January":   "Январь",
+    "February":  "Февраль",
+    "March":     "Март",
+    "April":     "Апрель",
+    "May":       "Май",
+    "June":      "Июнь",
+    "July":      "Июль",
+    "August":    "Август",
+    "September": "Сентябрь",
+    "October":   "Октябрь",
+    "November":  "Ноябрь",
+    "December":  "Декабрь",
+}
 # ── Database ───────────────────────────────────────────────────────────────────
 
 def get_db() -> sqlite3.Connection:
@@ -174,7 +202,7 @@ def build_schedule_text(year: int, month: int) -> str:
     lines = [f"📅 *{MONTH_NAMES[month]} {year}* — Помеченные Дни\n"]
     for count, iso in sorted(counter, reverse=True):
         d        = datetime.strptime(iso, "%Y-%m-%d")
-        day_name = d.strftime("%A %d")
+        day_name = translate_day(iso)
         players  = ", ".join(by_date[iso])
         lines.append(f"  🗡 *{day_name} * — *({count})* {players} ")
     return "\n".join(lines)
@@ -191,6 +219,16 @@ def build_schedule_markup(year: int, month: int) -> InlineKeyboardMarkup:
     )
     return markup
 
+# ── Date translation functions ───────────────────────────────────────────────────────────
+
+def translate_day(day: str) -> str:
+    d = datetime.strptime(day, "%Y-%m-%d")
+    d_trans = re.compile('|'.join(map(re.escape, DAY_TRANSLATIONS)))
+    m_trans = re.compile('|'.join(map(re.escape, MONTH_TRANSLATIONS)))
+
+    d = d_trans.sub(lambda match: DAY_TRANSLATIONS[match.group(0)], d.strftime("%A, %B %d"))
+    d = m_trans.sub(lambda match: MONTH_TRANSLATIONS[match.group(0)], d)
+    return d
 
 # ── Command handlers ───────────────────────────────────────────────────────────
 
@@ -250,9 +288,8 @@ def cmd_mydates(message):
         y, m = int(ym[:4]), int(ym[5:])
         lines.append(f"📅 *{MONTH_NAMES[m]} {y}*")
         for iso in by_month[ym]:
-            d = datetime.strptime(iso, "%Y-%m-%d")
-            lines.append(f"   • {d.strftime('%A, %B %d')}")
-    lines.append(f"\n_Total: {len(dates)} session(s)_")
+            lines.append(f"   • {translate_day(iso)}")
+    lines.append(f"\n_Всего: {len(dates)} сессий(я)_")
 
     bot.send_message(message.chat.id, "\n".join(lines))
 
@@ -323,9 +360,9 @@ def callback_handler(call):
                 y, m = int(ym[:4]), int(ym[5:])
                 lines.append(f"📅 {MONTH_NAMES[m]} {y}")
                 for iso in by_month[ym]:
-                    d2 = datetime.strptime(iso, "%Y-%m-%d")
-                    lines.append(f"  • {d2.strftime('%a %d')}")
-            bot.answer_callback_query(call.id, "\n".join(lines), show_alert=True)
+                    lines.append(f"  • {translate_day(iso)}")
+            bot.send_message(call.message.chat.id, "\n".join(lines))
+            
 
     # ── Schedule month navigation ──────────────────────────────────────────────
     elif tag == "SCHED":
@@ -352,6 +389,12 @@ def callback_handler(call):
             reply_markup=markup,
         )
 
+# ── Menu ────────────────────────────────────────────────────────────────
+command_menu = bot.set_my_commands([
+    BotCommand("/start", "🪬 Призвать Оракула Дат"),
+    BotCommand("/schedule", "📋 Посмотреть Помеченные Дни"),
+    BotCommand("/mydates", "👤 Посмотреть Мои Дни Силы"),
+])
 
 # ── Entry point ────────────────────────────────────────────────────────────────
 
