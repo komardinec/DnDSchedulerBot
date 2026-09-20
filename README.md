@@ -2,15 +2,15 @@
 
 Simple Telegram bot created for small friend group DnD session scheduling. For this bot was used SQLite and pyTelegramBotAPI (telebot).
 
-    - Python automatically handles SQLite database. This file exists in the same directory with `main.py` and created if not already presented;
+    - Python automatically handles SQLite database. This file exists in the same directory with main.py and created if not already presented;
     - Bot have menu for invoking bot commands;
     - Bot focused on presenting a calendar view of preferred days for sessions, based on peoples choices;
-    - Bot automatically takes BOT_TOKEN from `.env` file or from system environment variable.
+    - Bot automatically takes BOT_TOKEN from .env file or from system environment variable.
 
 # Usage
 1. Clone repository into your suitable directory:
 ``` bash
-https://github.com/komardinec/DnDSchedulerBot.git
+git clone https://github.com/komardinec/DnDSchedulerBot.git
 ```
 
 2. Install `Python`, `pip` and `pip-venv` (example for Debian-based distributive):
